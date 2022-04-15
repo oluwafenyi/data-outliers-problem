@@ -23,7 +23,7 @@ public class IQROutlierDetectionStrategy implements IOutlierDetectionStrategy {
         List<DataPoint> outliers;
         List<DataPoint> combinedList = Stream.concat(historicalDataPoints.stream(), dataPoints.stream()).collect(Collectors.toList());
 
-        if (combinedList.size() < 4) {
+        if (combinedList.size() <= 4) {
             return new LinkedList<>();
         }
 
@@ -41,8 +41,8 @@ public class IQROutlierDetectionStrategy implements IOutlierDetectionStrategy {
         double firstQuartileIndex = (double)(combinedList.size() + 1) / 4;
         double thirdQuartileIndex = 3 * (double)(combinedList.size() + 1) / 4;
 
-        double firstPriceQuartile = getPriceQuartile(combinedList, firstQuartileIndex);
-        double thirdPriceQuartile = getPriceQuartile(combinedList, thirdQuartileIndex);
+        double firstPriceQuartile = getPriceQuartile(combinedList, firstQuartileIndex - 1);
+        double thirdPriceQuartile = getPriceQuartile(combinedList, thirdQuartileIndex - 1);
 
         double k = (thirdPriceQuartile - firstPriceQuartile) * 1.5;
         double lowerLimit = firstPriceQuartile - k;

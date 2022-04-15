@@ -81,13 +81,27 @@ public class IQROutlierDetectionTest {
     }
 
     @Test
+    public void getOutliersFourDataPointsTest() {
+        List<DataPoint> dataPoints = new LinkedList<>();
+        dataPoints.add(new DataPoint("21-20-2021", 1));
+        dataPoints.add(new DataPoint("22-20-2021", 1));
+        dataPoints.add(new DataPoint("23-20-2021", 1));
+        dataPoints.add(new DataPoint("24-20-2021", 1));
+        List<DataPoint> outliers = this.detector.getOutliers(dataPoints);
+        Assert.assertEquals(0, outliers.size());
+    }
+
+    @Test
     public void getOutliersCompoundedHistoricalDataTest() {
         this.detector.getOutliers(new LinkedList<>(List.of(new DataPoint("20-20-2021", 1))));
-        this.detector.getOutliers(new LinkedList<>(List.of(new DataPoint("21-20-2021", 1))));
-        this.detector.getOutliers(new LinkedList<>(List.of(new DataPoint("22-20-2021", 1))));
-        this.detector.getOutliers(new LinkedList<>(List.of(new DataPoint("23-20-2021", 1))));
-        List<DataPoint> outliers = this.detector.getOutliers(new LinkedList<>(List.of(new DataPoint("24-20-2021", 100))));
-
+        this.detector.getOutliers(new LinkedList<>(List.of(new DataPoint("21-20-2021", 2))));
+        this.detector.getOutliers(new LinkedList<>(List.of(new DataPoint("22-20-2021", 3))));
+        this.detector.getOutliers(new LinkedList<>(List.of(new DataPoint("23-20-2021", 4))));
+        this.detector.getOutliers(new LinkedList<>(List.of(new DataPoint("24-20-2021", 5))));
+        this.detector.getOutliers(new LinkedList<>(List.of(new DataPoint("25-20-2021", 5))));
+        this.detector.getOutliers(new LinkedList<>(List.of(new DataPoint("26-20-2021", 5))));
+        this.detector.getOutliers(new LinkedList<>(List.of(new DataPoint("27-20-2021", 5))));
+        List<DataPoint> outliers = this.detector.getOutliers(new LinkedList<>(List.of(new DataPoint("25-20-2021", 1000))));
         Assert.assertEquals(1, outliers.size());
     }
 }
