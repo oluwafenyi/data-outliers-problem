@@ -21,8 +21,12 @@ public class IQROutlierDetectionStrategy implements IOutlierDetectionStrategy {
     @Override
     public List<DataPoint> getOutliers(List<DataPoint> historicalDataPoints, List<DataPoint> dataPoints) {
         List<DataPoint> outliers;
-
         List<DataPoint> combinedList = Stream.concat(historicalDataPoints.stream(), dataPoints.stream()).collect(Collectors.toList());
+
+        if (combinedList.size() < 4) {
+            return new LinkedList<>();
+        }
+
         combinedList.sort(new Comparator<>() {
             @Override
             public int compare(DataPoint o1, DataPoint o2) {
@@ -34,7 +38,6 @@ public class IQROutlierDetectionStrategy implements IOutlierDetectionStrategy {
                 return 0;
             }
         });
-
         double firstQuartileIndex = (double)(combinedList.size() + 1) / 4;
         double thirdQuartileIndex = 3 * (double)(combinedList.size() + 1) / 4;
 

@@ -18,8 +18,9 @@ public class OutlierDetector {
     }
 
     public List<DataPoint> getOutliers(List<DataPoint> dataPoints) {
+        List<DataPoint> outliers = this.detectionStrategy.getOutliers(this.historicalDataPoints, dataPoints);
         this.historicalDataPoints.addAll(dataPoints);
-        return this.detectionStrategy.getOutliers(this.historicalDataPoints, dataPoints);
+        return outliers;
     }
 
     public List<DataPoint> removeOutliers(List<DataPoint> dataPoints, List<DataPoint> outliers) {
