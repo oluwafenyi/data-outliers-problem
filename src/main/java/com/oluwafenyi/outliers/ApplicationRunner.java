@@ -15,10 +15,20 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
 
-public class Main {
+/**
+ * Class containing an interactive program for retrieving outliers from csv datasets
+ */
+public class ApplicationRunner {
+    /**
+     * Scanner instance to read input from user
+     */
     private static final Scanner input = new Scanner(System.in);
 
-
+    /**
+     * getValidFilePath takes user input and returns a path for an existing file entered by the user, if the user
+     * supplies an invalid path, they are prompted to try again
+     * @return filePath
+     */
     public static String getValidFilePath() {
         while (true) {
             System.out.println("Enter path to input CSV file:");
@@ -32,20 +42,33 @@ public class Main {
         }
     }
 
+    /**
+     * getValidSavePath takes user input and returns a valid path where a file does not already exist, if user supplies
+     * an invalid path, they are prompted to try again
+     * @return filePath
+     */
     public static String getValidSavePath() {
         while (true) {
             System.out.println("Enter path to save output CSV file:");
             String filePath = input.next();
             Path path = Paths.get(filePath);
+            Path directory = path.getParent();
             if (Files.exists(path)) {
                 System.out.println("error: a file exists at that path, please choose another");
             } else {
-                return filePath;
+                if (Files.isDirectory(directory)) {
+                    return filePath;
+                }
+                System.out.println("error: invalid directory path");
             }
         }
     }
 
-    public static void main(String[] args) {
+    /**
+     * Interactive method for detecting outliers, on each run of the detection algorithm, the data points considered
+     * are stored for the detection of outliers on further runs.
+     */
+    public static void run() {
         IOutlierDetectionStrategy strategy = new IQROutlierDetectionStrategy();
         OutlierDetector detector = new OutlierDetector(strategy);
 
@@ -80,5 +103,13 @@ public class Main {
                 System.out.println("error: could not save data to the path. " + ex);
             }
         }
+    }
+
+    /**
+     * calls the run() method
+     * @param args command line arguments
+     */
+    public static void main(String[] args) {
+        run();
     }
 }
