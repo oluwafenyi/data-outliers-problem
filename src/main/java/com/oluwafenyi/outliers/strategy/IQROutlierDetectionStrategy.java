@@ -2,9 +2,9 @@ package com.oluwafenyi.outliers.strategy;
 
 import com.oluwafenyi.outliers.DataPoint;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Concrete implementation of {@link IOutlierDetectionStrategy}, this implementation uses the inter-quartile range to
@@ -58,20 +58,18 @@ public class IQROutlierDetectionStrategy implements IOutlierDetectionStrategy {
     /**
      * Implementation of {@link IOutlierDetectionStrategy}.getOutliers(), sorts the data points by price, determines
      * IQR and returns values that don't fall within Q1 - (IQR * 1.5) and Q3 + (IQR * 1.5)
-     * @param historicalDataPoints historical data points for consideration
      * @param dataPoints list of data points
      * @return values that don't fall within Q1 - (IQR * 1.5) and Q3 + (IQR * 1.5)
      */
     @Override
-    public List<DataPoint> getOutliers(List<DataPoint> historicalDataPoints, List<DataPoint> dataPoints) {
+    public List<DataPoint> getOutliers(List<DataPoint> dataPoints) {
         List<DataPoint> outliers;
-        List<DataPoint> combinedList = Stream.concat(historicalDataPoints.stream(), dataPoints.stream()).collect(Collectors.toList());
 
-        if (combinedList.size() <= 4) {
+        if (dataPoints.size() <= 4) {
             return new LinkedList<>();
         }
 
-        combinedList.sort(new Comparator<>() {
+        dataPoints.sort(new Comparator<>() {
             @Override
             public int compare(DataPoint o1, DataPoint o2) {
                 if (o1.price > o2.price) {
@@ -82,11 +80,11 @@ public class IQROutlierDetectionStrategy implements IOutlierDetectionStrategy {
                 return 0;
             }
         });
-        double firstQuartileIndex = (double)(combinedList.size() + 1) / 4;
-        double thirdQuartileIndex = 3 * (double)(combinedList.size() + 1) / 4;
+        double firstQuartileIndex = (double)(dataPoints.size() + 1) / 4;
+        double thirdQuartileIndex = 3 * (double)(dataPoints.size() + 1) / 4;
 
-        double firstPriceQuartileValue = getPriceQuartileValue(combinedList, firstQuartileIndex);
-        double thirdPriceQuartileValue = getPriceQuartileValue(combinedList, thirdQuartileIndex);
+        double firstPriceQuartileValue = getPriceQuartileValue(dataPoints, firstQuartileIndex);
+        double thirdPriceQuartileValue = getPriceQuartileValue(dataPoints, thirdQuartileIndex);
 
         double k = (thirdPriceQuartileValue - firstPriceQuartileValue) * 1.5;
         double lowerLimit = firstPriceQuartileValue - k;
@@ -104,7 +102,7 @@ public class IQROutlierDetectionStrategy implements IOutlierDetectionStrategy {
      */
     @Override
     public List<DataPoint> removeOutliers(List<DataPoint> dataPoints, List<DataPoint> outliers) {
-        HashMap<String, DataPoint> outlierMap = new HashMap<>();
+        HashMap<LocalDate, DataPoint> outlierMap = new HashMap<>();
         outliers.forEach(dataPoint -> {
             outlierMap.put(dataPoint.date, dataPoint);
         });

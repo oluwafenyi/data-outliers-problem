@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -15,7 +17,7 @@ import java.util.Scanner;
 /**
  * A concrete of the {@link IDataLoader} interface that supports loading data points from CSV files.
  * CSV files are expected to have two columns, first for date and second for price. The lines should be delimited by
- * commas, and should not contain quotation wrapping.
+ * commas, and should not contain quotation wrapping. Date format is expected to be dd/MM/yyyy.
  */
 public class CSVReader implements IDataLoader {
     /**
@@ -26,6 +28,8 @@ public class CSVReader implements IDataLoader {
      * Flag to set if headers are present in the CSV file
      */
     private final boolean headersSet;
+
+    protected final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     /**
      * Constructor for creating an instance of {@link CSVReader}
@@ -67,9 +71,9 @@ public class CSVReader implements IDataLoader {
                 continue;
             }
             String[] line = lineStr.split(",");
-            String date = line[0];
-            String price = line[1];
-            data.add(new DataPoint(date, Double.parseDouble(price)));
+            LocalDate date = LocalDate.parse(line[0], this.dateFormatter);
+            double price = Double.parseDouble(line[1]);
+            data.add(new DataPoint(date, price));
         }
         scanner.close();
         return data;

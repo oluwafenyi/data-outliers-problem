@@ -12,6 +12,8 @@ import com.oluwafenyi.outliers.strategy.IQROutlierDetectionStrategy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
 
@@ -65,43 +67,63 @@ public class ApplicationRunner {
     }
 
     /**
+     * getDatePoint gets a date input from the user, if an invalid date value is supplied, the user is prompted to try
+     * again
+     * @return LocalDate instance
+     */
+    public static LocalDate getDatePoint() {
+        while (true) {
+            System.out.println("Enter Date Checkpoint for Outlier determination (format:dd-MM-yyyy):");
+            String date = input.next();
+            LocalDate dateObj;
+            try {
+                dateObj = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                return dateObj;
+            } catch (Exception ex) {
+                System.out.println("Error parsing date: " + ex.getMessage());
+            }
+        }
+    }
+
+    /**
      * Interactive method for detecting outliers, on each run of the detection algorithm, the data points considered
      * are stored for the detection of outliers on further runs.
      */
     public static void run() {
         IOutlierDetectionStrategy strategy = new IQROutlierDetectionStrategy();
-        OutlierDetector detector = new OutlierDetector(strategy);
-
         System.out.println("Ensure your input CSV file contains headers.");
-        while (true) {
-            String inputFilePath = getValidFilePath();
-            String outputFilePath = getValidSavePath();
+        OutlierDetector detector = new OutlierDetector(strategy);
+        String inputFilePath = getValidFilePath();
+        String outputFilePath = getValidSavePath();
 
-            IDataLoader loader = new CSVReader(inputFilePath, true);
-            List<DataPoint> data = null;
-            try {
-                data = loader.load();
-            } catch (DataLoadingException ex) {
-                System.out.println("error: could not load data from the CSV file supplied. " + ex);
-                continue;
-            }
-            List<DataPoint> outliers = detector.getOutliers(data);
+        IDataLoader loader = new CSVReader(inputFilePath, true);
+        List<DataPoint> data = null;
+        try {
+            data = loader.load();
+        } catch (DataLoadingException ex) {
+            System.out.println("error: could not load data from the CSV file supplied. " + ex);
+            return;
+        }
+        detector.addDataPoints(data);
 
-            if (outliers.size() > 0) {
-                System.out.println("\nThe following outliers were found in your data set:");
-                outliers.forEach(dataPoint -> {
-                    System.out.println(dataPoint.date + ": " + dataPoint.price);
-                });
-            }
+        LocalDate date = getDatePoint();
+        List<DataPoint> outliers = detector.getOutliersUpToDate(date);
 
-            List<DataPoint> cleanedData = detector.removeOutliers(data, outliers);
-            IDataSaver saver = new CSVWriter(outputFilePath);
-            try {
-                saver.save(cleanedData);
-                System.out.println("\nOutput file written to " + outputFilePath);
-            } catch (DataSavingException ex) {
-                System.out.println("error: could not save data to the path. " + ex);
-            }
+        if (outliers.size() > 0) {
+            System.out.println("\nThe following outliers were found in your data set:");
+            outliers.forEach(dataPoint -> {
+                System.out.println(dataPoint.date + ": " + dataPoint.price);
+            });
+            System.out.println("Removing them from data set...");
+        }
+
+        List<DataPoint> cleanedData = detector.removeOutliersUptoDate(outliers, date);
+        IDataSaver saver = new CSVWriter(outputFilePath);
+        try {
+            saver.save(cleanedData);
+            System.out.println("\nOutput file written to " + outputFilePath);
+        } catch (DataSavingException ex) {
+            System.out.println("error: could not save data to the path. " + ex);
         }
     }
 

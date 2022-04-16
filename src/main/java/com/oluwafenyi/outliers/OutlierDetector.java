@@ -2,8 +2,10 @@ package com.oluwafenyi.outliers;
 
 import com.oluwafenyi.outliers.strategy.IOutlierDetectionStrategy;
 
+import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This class employs the strategy design pattern to enable the use of different algorithms to find outliers in a set
@@ -17,7 +19,7 @@ public class OutlierDetector {
     /**
      * A store for all data points processed by the outlier detector
      */
-    List<DataPoint> historicalDataPoints = new LinkedList<>();
+    private final List<DataPoint> historicalDataPoints = new LinkedList<>();
 
     /**
      * Constructor for creating am {@link OutlierDetector} instance
@@ -36,24 +38,47 @@ public class OutlierDetector {
     }
 
     /**
-     * This method calls on the {@link IOutlierDetectionStrategy}.getOutliers() implementation, the data points passed
-     * in are persisted for subsequent evaluations of outliers
-     * @param dataPoints a list of data points, non-null
+     * Add data points for consideration
+     * @param dataPoints list of data points
+     */
+    public void addDataPoints(List<DataPoint> dataPoints) {
+        this.historicalDataPoints.addAll(dataPoints);
+    }
+
+    /**
+     * This method calls on the {@link IOutlierDetectionStrategy}.getOutliers() implementation
      * @return a list of outliers in the given data point
      */
-    public List<DataPoint> getOutliers(List<DataPoint> dataPoints) {
-        List<DataPoint> outliers = this.detectionStrategy.getOutliers(this.historicalDataPoints, dataPoints);
-        this.historicalDataPoints.addAll(dataPoints);
-        return outliers;
+    public List<DataPoint> getOutliers() {
+        return this.detectionStrategy.getOutliers(this.historicalDataPoints);
+    }
+
+    /**
+     * Filters outliers up to date specified and calls on the {@link IOutlierDetectionStrategy}.getOutliers() implementation
+     * @param date date value
+     * @return list of outliers up to specified date
+     */
+    public List<DataPoint> getOutliersUpToDate(LocalDate date) {
+        List<DataPoint> dataPointsToConsider = this.historicalDataPoints.stream().filter(dataPoint -> dataPoint.date.isBefore(date) || dataPoint.date.isEqual(date)).collect(Collectors.toList());
+        return this.detectionStrategy.getOutliers(dataPointsToConsider);
     }
 
     /**
      * This method calls on the {@link IOutlierDetectionStrategy}.removeOutliers() implementation
-     * @param dataPoints a list of data points, non-null
      * @param outliers a list of outliers to be removed from the list of data points, non-null
      * @return a list of data points without the outliers
      */
-    public List<DataPoint> removeOutliers(List<DataPoint> dataPoints, List<DataPoint> outliers) {
-        return this.detectionStrategy.removeOutliers(dataPoints, outliers);
+    public List<DataPoint> removeOutliers(List<DataPoint> outliers) {
+        return this.detectionStrategy.removeOutliers(this.historicalDataPoints, outliers);
+    }
+
+    /**
+     * This method calls on the {@link IOutlierDetectionStrategy}.removeOutliers() implementation, and filters results up to specified date
+     * @param outliers list of data points to remove
+     * @param date date value
+     * @return list of historical data points that are not outliers up to specified date
+     */
+    public List<DataPoint> removeOutliersUptoDate(List<DataPoint> outliers, LocalDate date) {
+        return this.detectionStrategy.removeOutliers(this.historicalDataPoints, outliers).stream().filter(dataPoint -> dataPoint.date.isBefore(date) || dataPoint.date.isEqual(date)).collect(Collectors.toList());
     }
 }
